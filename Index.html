@@ -3,68 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cypher Mining</title>
+    <title>Cypher - Gold Mining</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { background-color: #0e0e0e; color: #ffffff; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; padding: 0; overflow: hidden; }
-        .container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
-        #balance { font-size: 48px; font-weight: bold; color: #f3ba2f; margin-bottom: 10px; }
-        .dust-label { font-size: 18px; color: #aaa; margin-bottom: 40px; }
-        #coin { width: 250px; height: 250px; background: radial-gradient(circle, #f3ba2f 0%, #a67c00 100%); border-radius: 50%; border: 8px solid #ffdb4d; box-shadow: 0 0 50px rgba(243, 186, 47, 0.4); display: flex; align-items: center; justify-content: center; font-size: 80px; font-weight: bold; cursor: pointer; user-select: none; transition: transform 0.1s; }
-        #coin:active { transform: scale(0.9); }
-        #energy-bar-container { width: 80%; height: 10px; background: #333; border-radius: 5px; margin-top: 50px; }
-        #energy-fill { width: 100%; height: 100%; background: #f3ba2f; border-radius: 5px; transition: width 0.3s; }
-        #energy-text { margin-top: 10px; color: #f3ba2f; font-weight: bold; }
+        :root {
+            --primary-gold: #FFD700;
+            --dark-gold: #B8860B;
+            --bg-dark: #0a0a0a;
+            --card-bg: #1a1a1a;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Inter', -apple-system, sans-serif;
+            margin: 0; padding: 0;
+            display: flex; flex-direction: column;
+            height: 100vh; overflow: hidden;
+            user-select: none;
+        }
+
+        /* Header Stats */
+        .header { padding: 20px; text-align: center; }
+        .balance-container { display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .gold-icon { width: 40px; height: 40px; background: var(--primary-gold); border-radius: 50%; box-shadow: 0 0 15px var(--primary-gold); }
+        #balance { font-size: 42px; font-weight: 800; color: white; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
+
+        /* Mining Area */
+        .mining-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        .coin-wrapper { position: relative; cursor: pointer; transition: transform 0.05s; }
+        .coin-wrapper:active { transform: scale(0.92); }
+        
+        .main-coin {
+            width: 260px; height: 260px;
+            background: radial-gradient(circle, #fce043 0%, #fbab7e 100%);
+            border-radius: 50%;
+            border: 10px solid rgba(255, 215, 0, 0.3);
+            box-shadow: 0 0 50px rgba(255, 171, 126, 0.4);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 100px; font-weight: bold; color: white;
+        }
+
+        /* Floating Animation */
+        .tap-text {
+            position: absolute; color: white; font-weight: bold;
+            font-size: 24px; pointer-events: none;
+            animation: floatUp 0.8s ease-out forwards;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-100px); }
+        }
+
+        /* Navigation Bar (AVACOIN Style) */
+        .navbar {
+            background: #151515;
+            display: flex; justify-content: space-around;
+            padding: 15px 10px; border-top: 1px solid #333;
+        }
+        .nav-btn { color: #777; font-size: 12px; text-align: center; flex: 1; cursor: pointer; }
+        .nav-btn.active { color: var(--primary-gold); }
+        .nav-btn i { font-size: 22px; display: block; margin-bottom: 4px; }
+
+        /* Energy Bar */
+        .energy-container { width: 80%; margin-bottom: 30px; }
+        .energy-label { display: flex; justify-content: space-between; margin-bottom: 5px; font-weight: bold; color: var(--primary-gold); }
+        .energy-bar { width: 100%; height: 12px; background: #333; border-radius: 10px; overflow: hidden; }
+        .energy-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #FFD700, #fbab7e); transition: width 0.2s; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div id="balance">0</div>
-        <div class="dust-label">CYPHER DUST</div>
-        
-        <div id="coin" onclick="tap()">C</div>
 
-        <div id="energy-bar-container">
-            <div id="energy-fill"></div>
+    <div class="header">
+        <div class="balance-container">
+            <span id="balance">0</span>
         </div>
-        <div id="energy-text">⚡ 1000 / 1000</div>
+        <p style="margin:0; color: #888; letter-spacing: 2px;">GOLD DUST</p>
+    </div>
+
+    <div class="mining-area" id="mining-page">
+        <div class="coin-wrapper" id="coin-trigger" onclick="handleTap(event)">
+            <div class="main-coin">C</div>
+        </div>
+    </div>
+
+    <div class="energy-container" style="align-self: center;">
+        <div class="energy-label">
+            <span>⚡ Energy</span>
+            <span id="energy-val">1000/1000</span>
+        </div>
+        <div class="energy-bar"><div class="energy-fill" id="energy-fill"></div></div>
+    </div>
+
+    <div class="navbar">
+        <div class="nav-btn active"><i>⛏️</i>Mine</div>
+        <div class="nav-btn"><i>📋</i>Tasks</div>
+        <div class="nav-btn"><i>👥</i>Frens</div>
+        <div class="nav-btn"><i>💰</i>Wallet</div>
     </div>
 
     <script>
-        let dust = localStorage.getItem('cypher_dust') ? parseInt(localStorage.getItem('cypher_dust')) : 0;
+        let dust = parseInt(localStorage.getItem('cypher_dust')) || 0;
         let energy = 1000;
         const maxEnergy = 1000;
 
-        const balanceEl = document.getElementById('balance');
-        const energyFill = document.getElementById('energy-fill');
-        const energyText = document.getElementById('energy-text');
+        function handleTap(e) {
+            if (energy <= 0) return;
 
-        function updateUI() {
-            balanceEl.innerText = dust.toLocaleString();
-            energyText.innerText = `⚡ ${energy} / ${maxEnergy}`;
-            energyFill.style.width = (energy / maxEnergy * 100) + "%";
+            // Update Stats
+            dust += 1;
+            energy -= 1;
+            updateDisplay();
+
+            // Vibration
+            window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+
+            // Floating Text Effect
+            const text = document.createElement('div');
+            text.className = 'tap-text';
+            text.innerText = '+1';
+            text.style.left = e.clientX + 'px';
+            text.style.top = e.clientY + 'px';
+            document.body.appendChild(text);
+            setTimeout(() => text.remove(), 800);
+        }
+
+        function updateDisplay() {
+            document.getElementById('balance').innerText = dust.toLocaleString();
+            document.getElementById('energy-val').innerText = `${energy}/${maxEnergy}`;
+            document.getElementById('energy-fill').style.width = (energy/maxEnergy*100) + '%';
             localStorage.setItem('cypher_dust', dust);
         }
 
-        function tap() {
-            if (energy > 0) {
-                dust += 1;
-                energy -= 1;
-                updateUI();
-                // Haptic feedback for Telegram
-                window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-            }
-        }
-
-        // Recharge energy +1 every second
+        // Energy Refill
         setInterval(() => {
             if (energy < maxEnergy) {
                 energy++;
-                updateUI();
+                updateDisplay();
             }
-        }, 1000);
+        }, 1500);
 
-        updateUI();
+        updateDisplay();
         window.Telegram.WebApp.expand();
     </script>
 </body>
